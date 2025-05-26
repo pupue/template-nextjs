@@ -1,0 +1,23 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: typecheck
+      run: npx tsc -p tsconfig.json --noEmit
+      glob:
+        - "src/**/*.ts"
+        - "src/**/*.tsx"
+
+    - name: biome-check
+      run: npx biome check --write {staged_files}
+      glob:
+        - "src/**/*.ts"
+        - "src/**/*.tsx"
+        - "src/**/*.css"
+
+    - name: biome-format
+      run: npx biome format --write {staged_files}
+      glob:
+        - "src/**/*.ts"
+        - "src/**/*.tsx"
+        - "src/**/*.css"
+      stage_fixed: true

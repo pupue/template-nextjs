@@ -1,22 +1,23 @@
 "use client";
 
+import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
-import type { SelectCategory, SelectTransaction } from "@/db/schema";
+import type { SelectTransaction } from "@/db/schema";
+import { categoriesAtom } from "@/store/categories";
 import { cn } from "@/utils/cn";
 
 type TransactionListProps = {
-	categories: SelectCategory[];
 	transactions: SelectTransaction[];
 	onTransactionsLoaded: (transactions: SelectTransaction[]) => void;
 	scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 };
 
 export default function TransactionList({
-	categories,
 	transactions,
 	onTransactionsLoaded,
 	scrollContainerRef,
 }: TransactionListProps) {
+	const categories = useAtomValue(categoriesAtom);
 	const listRef = useRef<HTMLDivElement>(null);
 	const isInitialLoad = useRef(true);
 	const hasFetched = useRef(false);

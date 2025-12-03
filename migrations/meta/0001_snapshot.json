@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "ae33812d-94c8-4994-9f4f-ef9e62d4aa39",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "f69fab1f-38ce-4abb-b98c-bc5b72ffbcd5",
+  "prevId": "ae33812d-94c8-4994-9f4f-ef9e62d4aa39",
   "tables": {
     "categories": {
       "name": "categories",
@@ -19,6 +19,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "updated_at": {

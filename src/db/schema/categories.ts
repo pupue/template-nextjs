@@ -4,10 +4,12 @@ import { timestamps } from "./columns.helpers";
 export const categoriesTable = sqliteTable("categories", {
 	id: int().primaryKey({ autoIncrement: true }),
 	name: text().notNull(),
+	type: text().$type<"income" | "expense">().notNull(),
 	...timestamps,
 });
 
 export const categories = categoriesTable;
 
+export type CategoryType = (typeof categoriesTable.$inferInsert)["type"];
 export type InsertCategory = typeof categoriesTable.$inferInsert;
 export type SelectCategory = typeof categoriesTable.$inferSelect;

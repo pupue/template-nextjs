@@ -1,13 +1,11 @@
 "use client";
 
 import type { CalendarDate } from "@internationalized/date";
-import { ChevronDown, Plus } from "lucide-react";
+import { useAtom } from "jotai";
+import { useHydrateAtoms } from "jotai/utils";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import type {
-	ListBoxItemProps,
-	Selection,
-	ToggleButtonProps,
-} from "react-aria-components";
+import type { Selection, ToggleButtonProps } from "react-aria-components";
 import {
 	Button,
 	Calendar,
@@ -15,14 +13,10 @@ import {
 	CalendarGrid,
 	DatePicker,
 	Dialog,
-	DialogTrigger,
 	FieldError,
 	Form,
 	Group,
 	Input,
-	ListBox,
-	ListBoxItem,
-	Modal,
 	Popover,
 	TextField,
 	ToggleButton,
@@ -30,30 +24,28 @@ import {
 } from "react-aria-components";
 import InputLabel from "@/components/ui/input-label";
 import type { SelectCategory, SelectTransaction } from "@/db/schema";
+import { categoriesAtom, typeAtom } from "@/store/categories";
 import { cn } from "@/utils/cn";
+import CategoryPicker from "./_components/category-picker";
 
-type TransactionFormProps = {
-	categories: SelectCategory[];
+type Props = {
 	onTransactionAdded?: (transaction: SelectTransaction) => void;
+	categories: SelectCategory[];
 };
 
 export default function TransactionForm({
-	categories: initialCategories,
 	onTransactionAdded,
-}: TransactionFormProps) {
-	const [categories, setCategories] =
-		useState<SelectCategory[]>(initialCategories);
-	const [selectedCategoryKeys, setSelectedCategoryKeys] = useState<Selection>(
-		new Set(),
-	);
+	categories,
+}: Props) {
+	// サーバから受け取ったカテゴリをjotaiに保存
+	useHydrateAtoms([[categoriesAtom, categories]]);
+
+	const [selectedCategoryKeys, _] = useState<Selection>(new Set());
 	const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(null);
-	const [selectedType, setSelectedType] = useState<Selection>(
-		new Set(["income"]),
-	);
+	const [selectedType, setSelectedType] = useAtom(typeAtom);
+
 	const [amount, setAmount] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-	const [newCategoryName, setNewCategoryName] = useState("");
 
 	const today = new Date();
 	const formatted = today
@@ -64,46 +56,10 @@ export default function TransactionForm({
 		})
 		.replaceAll("/", "/");
 
-	const handleSelectionChange = (keys: Selection) => {
-		const keyArray = Array.from(keys);
-		// "add-new"が選択された場合は新規追加ダイアログを開く
-		if (keyArray.includes("add-new")) {
-			setIsCategoryDialogOpen(true);
-			// 選択をクリア
-			setSelectedCategoryKeys(new Set());
-		} else {
-			setSelectedCategoryKeys(keys);
-		}
-	};
-
-	const handleCategoryAdded = async (categoryName: string) => {
-		if (!categoryName.trim()) return;
-
-		try {
-			const response = await fetch("/api/categories", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ name: categoryName.trim() }),
-			});
-
-			if (!response.ok) {
-				console.error("カテゴリ追加エラー:", response.statusText);
-				alert("カテゴリの追加に失敗しました");
-				return;
-			}
-
-			const newCategory = await response.json();
-			setCategories([newCategory, ...categories]);
-			setNewCategoryName("");
-			setIsCategoryDialogOpen(false);
-			// 新しく追加したカテゴリを選択
-			setSelectedCategoryKeys(new Set([newCategory.id.toString()]));
-		} catch (error) {
-			console.error("カテゴリ追加エラー:", error);
-			alert("カテゴリの追加に失敗しました");
-		}
+	const handleTypeChange = (keys: Selection) => {
+		const typeKeys = Array.from(keys);
+		const type = typeKeys[0] === "income" ? "income" : "expense";
+		setSelectedType(type);
 	};
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -126,8 +82,7 @@ export default function TransactionForm({
 				: formatted.replace(/\//g, "-");
 
 			// タイプの処理
-			const typeKeys = Array.from(selectedType);
-			const type = typeKeys[0] === "income" ? "income" : "expense";
+			const type = selectedType;
 
 			// カテゴリIDの処理
 			const categoryKeys = Array.from(selectedCategoryKeys);
@@ -163,10 +118,8 @@ export default function TransactionForm({
 				onTransactionAdded(newTransaction);
 			}
 
-			// 成功時の処理
-			setSelectedCategoryKeys(new Set());
 			setSelectedDate(null);
-			setSelectedType(new Set(["income"]));
+			setSelectedType("income");
 			setAmount("");
 		} catch (error) {
 			console.error("取引追加エラー:", error);
@@ -223,8 +176,8 @@ export default function TransactionForm({
 				<div>
 					<InputLabel id="type-label">種類</InputLabel>
 					<ToggleButtonGroup
-						selectedKeys={selectedType}
-						onSelectionChange={setSelectedType}
+						selectedKeys={new Set([selectedType])}
+						onSelectionChange={handleTypeChange}
 						aria-labelledby="type-label"
 					>
 						<ShushiButton
@@ -263,73 +216,8 @@ export default function TransactionForm({
 				{/* カテゴリ */}
 				<div>
 					<InputLabel id="category-label">カテゴリ</InputLabel>
-					<ListBox
-						selectionMode="single"
-						selectedKeys={selectedCategoryKeys}
-						onSelectionChange={handleSelectionChange}
-						aria-labelledby="category-label"
-						className="w-full grid grid-cols-3 gap-2"
-					>
-						{categories.map((category) => (
-							<CategoryListItem
-								key={category.id}
-								id={category.id.toString()}
-								className="data-selected:bg-primary data-selected:text-white data-selected:border-primary"
-							>
-								<span className="text-xs">{category.name}</span>
-							</CategoryListItem>
-						))}
-						<CategoryListItem id="add-new">
-							<Plus size={20} />
-						</CategoryListItem>
-					</ListBox>
+					<CategoryPicker />
 				</div>
-
-				{/* 新規カテゴリ追加ダイアログ */}
-				<DialogTrigger
-					isOpen={isCategoryDialogOpen}
-					onOpenChange={setIsCategoryDialogOpen}
-				>
-					<Modal
-						isDismissable
-						className="bg-white border border-primary rounded-lg p-6 shadow-lg max-w-md w-full mx-4"
-					>
-						<Dialog>
-							<div className="space-y-4">
-								<InputLabel id="new-category-label">新規カテゴリ</InputLabel>
-								<TextField
-									value={newCategoryName}
-									onChange={setNewCategoryName}
-									isRequired
-									autoFocus
-								>
-									<Input
-										placeholder="カテゴリ名を入力"
-										className="w-full border border-input rounded-md p-2"
-									/>
-									<FieldError />
-								</TextField>
-								<div className="flex gap-2 justify-end">
-									<Button
-										onPress={() => {
-											setIsCategoryDialogOpen(false);
-											setNewCategoryName("");
-										}}
-										className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-									>
-										キャンセル
-									</Button>
-									<Button
-										onPress={() => handleCategoryAdded(newCategoryName)}
-										className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-									>
-										追加
-									</Button>
-								</div>
-							</div>
-						</Dialog>
-					</Modal>
-				</DialogTrigger>
 
 				<div className="col-span-2 flex justify-center">
 					<Button
@@ -356,25 +244,5 @@ function ShushiButton({ className, ...props }: ToggleButtonProps) {
 		>
 			{props.children}
 		</ToggleButton>
-	);
-}
-
-function CategoryListItem({
-	children,
-	className,
-	...props
-}: ListBoxItemProps & {
-	children: React.ReactNode;
-}) {
-	return (
-		<ListBoxItem
-			{...props}
-			className={cn(
-				"flex items-center justify-center rounded-md cursor-pointer border border-input p-4",
-				className,
-			)}
-		>
-			{children}
-		</ListBoxItem>
 	);
 }

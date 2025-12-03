@@ -1,26 +1,39 @@
 @import "tailwindcss";
-
-:root {
-	--background: #ffffff;
-	--foreground: #171717;
+@theme {
+	--color-button-primary: #37474f;
+	--color-gray-20: #878787;
+	--color-gray-40: #d1d1d1;
+	--color-secondary: #525256;
+	--color-primary: #2567e8;
+	--color-input: #d1d1d1;
+	--color-label: #525256;
+	--color-red-dark: #836f81;
+	--color-red-light: #e6e2e6;
+	--color-green-dark: #42887c;
+	--color-green-light: #d9e7e5;
+	--color-blue-dark: #3b82f6;
+	--color-blue-light: #edf4f8;
+	--color-custom-100: #2567e8;
 }
 
-@theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--font-sans: var(--font-geist-sans);
-	--font-mono: var(--font-geist-mono);
+input {
+	font-size: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--background: #0a0a0a;
-		--foreground: #ededed;
-	}
+/* react-aria-components */
+/* div[inert] {
+	background-color: rgba(0, 0, 0, 0.5);
+} */
+.react-aria-CalendarHeaderCell {
+	padding: 8px;
 }
-
-body {
-	background: var(--background);
-	color: var(--foreground);
-	font-family: Arial, Helvetica, sans-serif;
+.react-aria-ModalOverlay {
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, 0.5);
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	padding: 16px;
 }

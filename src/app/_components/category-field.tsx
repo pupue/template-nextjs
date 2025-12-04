@@ -10,11 +10,12 @@ import {
 	ListBoxItem,
 	Modal,
 } from "react-aria-components";
+import InputLabel from "@/components/ui/input-label";
 import { cn } from "@/utils/cn";
 import { useCategory } from "../_hooks/use-category";
 import CategoryAddForm from "./category-add-form";
 
-export default function CategoryPicker() {
+export default function CategoryField() {
 	const { filteredCategories, type } = useCategory();
 	const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function CategoryPicker() {
 		<>
 			<input type="hidden" name="categoryId" value={selectedCategoryId} />
 
+			<InputLabel id="category-label">カテゴリ</InputLabel>
 			<ListBox
 				selectionMode="single"
 				selectedKeys={

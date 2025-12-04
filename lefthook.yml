@@ -8,7 +8,7 @@ pre-commit:
         - "src/**/*.tsx"
 
     - name: biome-check
-      run: npx biome check --write {staged_files}
+      run: npx biome check --write --unsafe {staged_files}
       glob:
         - "src/**/*.ts"
         - "src/**/*.tsx"

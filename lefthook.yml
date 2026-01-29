@@ -1,0 +1,8 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: tsc
+      run: bunx tsc --noEmit
+
+    - name: biome:check
+      run: bunx --bun biome check --write {staged_files}
